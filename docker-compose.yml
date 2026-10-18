@@ -1,0 +1,46 @@
+services:
+  # 1. Object Storage (S3 Compatible via open community image)
+  minio:
+    image: docker.io/pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    container_name: platform_minio
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+
+  # 2. Data Warehouse (ClickHouse)
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: platform_clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: password123
+      CLICKHOUSE_DB: default
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  # 3. Orchestration (Apache Airflow - Standalone)
+  airflow:
+    image: apache/airflow:2.9.1-python3.11
+    container_name: platform_airflow
+    depends_on:
+      - clickhouse
+      - minio
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./include:/opt/airflow/include
+    command: standalone

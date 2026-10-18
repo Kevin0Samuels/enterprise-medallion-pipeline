@@ -1,0 +1,16 @@
+version: '1.0'
+table_name: bronze_users
+format: ORC
+partitions:
+- organisation_id
+- processing_date
+columns:
+- name: user_id
+  type: string
+- name: organisation_id
+  type: string
+- name: signup_date
+  type: string
+- name: email
+  type: string
+s3_path_pattern: http://minio:9000/bronze/users/{organisation_id}/{processing_date}/data.orc
