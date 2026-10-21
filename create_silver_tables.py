@@ -8,6 +8,66 @@ def build_silver_layer():
         password='password123'
     )
     
+    print("Creating Silver layer tables if they don't exist...")
+
+    # --- Create silver tables ---
+    client.command("""
+        CREATE TABLE IF NOT EXISTS silver_users (
+            user_id String,
+            email String,
+            signup_date DateTime,
+            organisation_id LowCardinality(String),
+            processing_date Date
+        ) ENGINE = MergeTree()
+        ORDER BY (organisation_id, user_id)
+    """)
+
+    client.command("""
+        CREATE TABLE IF NOT EXISTS silver_products (
+            product_id String,
+            category_id String,
+            price Float32,
+            organisation_id LowCardinality(String),
+            processing_date Date
+        ) ENGINE = MergeTree()
+        ORDER BY (organisation_id, product_id)
+    """)
+
+    client.command("""
+        CREATE TABLE IF NOT EXISTS silver_orders (
+            order_id String,
+            user_id String,
+            order_date DateTime,
+            status String,
+            organisation_id LowCardinality(String),
+            processing_date Date
+        ) ENGINE = MergeTree()
+        ORDER BY (organisation_id, order_id)
+    """)
+
+    client.command("""
+        CREATE TABLE IF NOT EXISTS silver_order_items (
+            item_id String,
+            order_id String,
+            product_id String,
+            quantity Int32,
+            organisation_id LowCardinality(String),
+            processing_date Date
+        ) ENGINE = MergeTree()
+        ORDER BY (organisation_id, item_id)
+    """)
+
+    client.command("""
+        CREATE TABLE IF NOT EXISTS silver_payments (
+            payment_id String,
+            order_id String,
+            amount Float32,
+            organisation_id LowCardinality(String),
+            processing_date Date
+        ) ENGINE = MergeTree()
+        ORDER BY (organisation_id, payment_id)
+    """)
+
     print("Populating Silver layer tables correctly...")
     
     # 1. Users
